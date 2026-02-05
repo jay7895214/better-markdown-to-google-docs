@@ -1,0 +1,24 @@
+{
+    "app": {
+        "title": "Markdown 轉 Google Docs",
+        "syncScroll": "同步滾動",
+        "example": "範例",
+        "clear": "清空",
+        "markdownInput": "Markdown 輸入",
+        "githubFlavor": "支援 GitHub 風格",
+        "preview": "預覽 (Google Doc 樣式)",
+        "downloadHtml": "下載 HTML",
+        "copyFormat": "複製格式 (貼上至 Doc)",
+        "placeholder": "# 在此開始輸入 Markdown...",
+        "confirmClear": "確定要清空所有內容嗎？",
+        "copied": "✅ 已複製！可直接貼上至 Google Docs",
+        "copyFailed": "複製失敗",
+        "notSupported": "瀏覽器不支援",
+        "downloaded": "HTML 檔案已下載",
+        "previewPlaceholder": "預覽將顯示於此...",
+        "language": "語言"
+    },
+    "example": {
+        "content": "# 專案會議記錄\n## 2023年 Q4 規劃\n\n**日期**: 2023-10-27\n**參與者**: 開發團隊、設計團隊\n\n### 實作三：AWS CloudShell 使用體驗\n\n2.  **操作檔案與指令**\n    * 輸入 `aws iam list-users`，結果應與本地 CLI 相同 (無底色測試)。\n    * 建立一個持久化檔案：\n        ```bash\n        echo \"Hello CloudShell\" > demo.txt\n        echo \"This is the second line\" >> demo.txt\n        cat demo.txt\n        ```\n    * **[💡 觀念解析]**：CloudShell 的 `/home/cloudshell-user` 目錄是持久化的，重啟後檔案仍會存在，適合存放常用腳本。\n    * 嘗試右上角的 `Actions` > `Upload/Download file` 功能。\n\n### 數據比較表\n\n| 功能模組名稱測試長度 | 開發預估時間 | 預算消耗百分比 | 目前開發狀態 |\n| :--- | :--- | :--- | :--- |\n| 使用者驗證 | 2週 | 15% | ✅ 完成 |\n| 支付串接 | 3週 | 25% | 🚧 進行中 |\n\n> \"成功的關鍵在於堅持不懈的優化與迭代。\""
+    }
+}
