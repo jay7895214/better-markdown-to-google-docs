@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off, Globe } from 'lucide-react';
+import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off } from 'lucide-react';
 
 const useMarked = () => {
     const [markedLib, setMarkedLib] = useState(null);
@@ -40,6 +40,15 @@ const App = () => {
 
     const toggleLanguage = () => {
         const newLang = currentLanguage === 'zh-TW' ? 'en' : 'zh-TW';
+
+        // Smart content switching: if current content matches current language's example,
+        // automatically switch to new language's example
+        const currentExample = t('example.content');
+        if (markdown === currentExample) {
+            const newT = i18n.getFixedT(newLang);
+            setMarkdown(newT('example.content'));
+        }
+
         i18n.changeLanguage(newLang);
         localStorage.setItem('language', newLang);
     };
@@ -245,44 +254,42 @@ const App = () => {
                 <div className="flex gap-2 items-center">
                     <button
                         onClick={toggleLanguage}
-                        className="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors border bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                        className="flex items-center justify-center w-10 h-10 text-lg rounded-md transition-colors border bg-white border-gray-200 hover:bg-gray-50"
                         title={t('app.language')}
                     >
-                        <Globe className="w-4 h-4" />
-                        <span className="hidden sm:inline">{currentLanguage === 'zh-TW' ? '中文' : 'EN'}</span>
+                        {currentLanguage === 'zh-TW' ? '🇹🇼' : '🇺🇸'}
                     </button>
                     <button
                         onClick={() => setSyncScroll(!syncScroll)}
-                        className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors border ${syncScroll
-                                ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                        className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors border ${syncScroll
+                            ? 'bg-blue-50 text-blue-700 border-blue-200'
+                            : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
                             }`}
                         title={t('app.syncScroll')}
                     >
-                        {syncScroll ? <Link2 className="w-4 h-4" /> : <Link2Off className="w-4 h-4" />}
-                        <span className="hidden sm:inline">{t('app.syncScroll')}</span>
+                        {syncScroll ? <Link2 className="w-5 h-5" /> : <Link2Off className="w-5 h-5" />}
                     </button>
                     <div className="h-6 w-px bg-gray-300 mx-1"></div>
                     <button
                         onClick={loadExample}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        className="flex items-center justify-center w-10 h-10 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors"
+                        title={t('app.example')}
                     >
-                        <RefreshCw className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t('app.example')}</span>
+                        <RefreshCw className="w-5 h-5" />
                     </button>
                     <button
                         onClick={clearContent}
-                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                        className="flex items-center justify-center w-10 h-10 text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                        title={t('app.clear')}
                     >
-                        <Trash2 className="w-4 h-4" />
-                        <span className="hidden sm:inline">{t('app.clear')}</span>
+                        <Trash2 className="w-5 h-5" />
                     </button>
                 </div>
             </header>
 
             <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
                 <div className="flex-1 flex flex-col border-r border-gray-200 bg-white min-w-0">
-                    <div className="px-4 py-2 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
+                    <div className="h-10 px-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
                         <span>{t('app.markdownInput')}</span>
                     </div>
                     <textarea
@@ -295,24 +302,23 @@ const App = () => {
                     />
                 </div>
 
-                <div className="flex-1 flex flex-col bg-gray-100 min-w-0 relative">
-                    <div className="px-4 py-2 bg-white border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center shadow-sm z-10">
+                <div className="flex-1 flex flex-col bg-white min-w-0 relative">
+                    <div className="h-10 px-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
                         <span>{t('app.preview')}</span>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1">
                             <button
                                 onClick={downloadHtml}
-                                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                                className="flex items-center justify-center w-8 h-8 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                 title={t('app.downloadHtml')}
                             >
-                                <Download className="w-3.5 h-3.5" />
-                                {t('app.downloadHtml')}
+                                <Download className="w-4 h-4" />
                             </button>
                             <button
                                 onClick={copyRichText}
-                                className="flex items-center gap-1.5 px-3 py-1 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded shadow-sm transition-all active:scale-95"
+                                className="flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded transition-all active:scale-95"
+                                title={t('app.copyFormat')}
                             >
-                                <Copy className="w-3.5 h-3.5" />
-                                {t('app.copyFormat')}
+                                <Copy className="w-4 h-4" />
                             </button>
                         </div>
                     </div>
@@ -320,22 +326,20 @@ const App = () => {
                     <div
                         ref={previewContainerRef}
                         onScroll={handlePreviewScroll}
-                        className="flex-1 overflow-y-auto p-4 md:p-8 bg-gray-100 flex justify-center items-start scroll-smooth"
+                        className="flex-1 overflow-y-auto p-6 bg-white"
                     >
-                        <div className="bg-white shadow-lg w-full max-w-[816px] min-h-[200px] p-[40px] md:p-[72px]">
-                            <div
-                                id="preview-content"
-                                ref={previewRef}
-                                className="preview-content"
-                                style={{
-                                    fontFamily: 'Arial, Roboto, sans-serif',
-                                    lineHeight: '1.5',
-                                    color: '#000000',
-                                    wordWrap: 'break-word'
-                                }}
-                                dangerouslySetInnerHTML={{ __html: htmlContent }}
-                            />
-                        </div>
+                        <div
+                            id="preview-content"
+                            ref={previewRef}
+                            className="preview-content max-w-[816px] mx-auto"
+                            style={{
+                                fontFamily: 'Arial, Roboto, sans-serif',
+                                lineHeight: '1.5',
+                                color: '#000000',
+                                wordWrap: 'break-word'
+                            }}
+                            dangerouslySetInnerHTML={{ __html: htmlContent }}
+                        />
                     </div>
                 </div>
             </div>
