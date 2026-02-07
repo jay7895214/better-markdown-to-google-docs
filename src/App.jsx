@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off } from 'lucide-react';
+import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off, GripVertical, GripHorizontal } from 'lucide-react';
+import { Panel, Group, Separator } from 'react-resizable-panels';
 
 const useMarked = () => {
     const [markedLib, setMarkedLib] = useState(null);
@@ -35,6 +36,15 @@ const App = () => {
     const previewContainerRef = useRef(null);
     const isScrollingRef = useRef(null);
     const scrollTimeoutRef = useRef(null);
+
+    // Responsive: detect if mobile view
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const currentLanguage = i18n.language;
 
@@ -286,22 +296,37 @@ const App = () => {
                 </div>
             </header>
 
-            <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
-                <div className="flex-1 flex flex-col border-r border-gray-200 bg-white min-w-0">
+            <Group orientation={isMobile ? 'vertical' : 'horizontal'} className="flex-1 overflow-hidden">
+                {/* Markdown Input Panel */}
+                <Panel defaultSize={50} minSize={20} className="flex flex-col bg-white">
                     <div className="h-10 px-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
                         <span>{t('app.markdownInput')}</span>
                     </div>
                     <textarea
                         ref={editorRef}
                         onScroll={handleEditorScroll}
-                        className="flex-1 w-full p-6 resize-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500/20 font-mono text-sm leading-relaxed text-gray-700"
+                        className="flex-1 w-full p-6 resize-none focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500/20 font-mono text-sm leading-relaxed text-gray-700 overflow-y-auto"
                         placeholder={t('app.placeholder')}
                         value={markdown}
                         onChange={(e) => setMarkdown(e.target.value)}
                     />
-                </div>
+                </Panel>
 
-                <div className="flex-1 flex flex-col bg-white min-w-0 relative">
+                {/* Resize Handle */}
+                <Separator className={`
+                    ${isMobile ? 'h-2 w-full cursor-row-resize' : 'w-2 h-full cursor-col-resize'}
+                    bg-gray-200 hover:bg-blue-400 active:bg-blue-500 transition-colors
+                    flex items-center justify-center group
+                `}>
+                    {isMobile ? (
+                        <GripHorizontal className="w-4 h-4 text-gray-400 group-hover:text-white" />
+                    ) : (
+                        <GripVertical className="w-4 h-4 text-gray-400 group-hover:text-white" />
+                    )}
+                </Separator>
+
+                {/* Preview Panel */}
+                <Panel defaultSize={50} minSize={20} className="flex flex-col bg-white">
                     <div className="h-10 px-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
                         <span>{t('app.preview')}</span>
                         <div className="flex gap-1">
@@ -340,8 +365,8 @@ const App = () => {
                             dangerouslySetInnerHTML={{ __html: htmlContent }}
                         />
                     </div>
-                </div>
-            </div>
+                </Panel>
+            </Group>
 
             {showToast && (
                 <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-up z-50">
