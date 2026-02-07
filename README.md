@@ -1,4 +1,4 @@
-# Markdown to Google Docs Converter
+# Better Markdown to Google Docs Converter
 
 將 Markdown 轉換成可直接貼上到 Google Docs 的格式化富文本。
 

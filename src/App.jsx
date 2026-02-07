@@ -57,6 +57,7 @@ const App = () => {
         setMarkdown(t('example.content'));
     }, []);
 
+
     useEffect(() => {
         if (marked && markdown) {
             marked.setOptions({
@@ -215,9 +216,7 @@ const App = () => {
         selection.removeAllRanges();
     };
 
-    const clearContent = () => {
-        if (window.confirm(t('app.confirmClear'))) setMarkdown('');
-    };
+    const clearContent = () => setMarkdown('');
 
     const loadExample = () => setMarkdown(t('example.content'));
 
