@@ -16,7 +16,9 @@
         "notSupported": "Browser not supported",
         "downloaded": "HTML file downloaded",
         "previewPlaceholder": "Preview will appear here...",
-        "language": "Language"
+        "language": "Language",
+        "footerDescription": "Open source Markdown to Google Docs converter — Convert MD to Google Doc directly in your browser without any add-ons. Perfect for code blocks, table imports, and privacy-first processing.",
+        "footerKeywords": "Markdown, Google Docs, Converter, MD to Google Doc, Table Import, Code Block Formatting"
     },
     "example": {
         "content": "# Project Meeting Notes\n## Q4 2023 Planning\n\n**Date**: 2023-10-27\n**Participants**: Development Team, Design Team\n\n### Practice 3: AWS CloudShell Experience\n\n2.  **File and Command Operations**\n    * Enter `aws iam list-users`, the result should be the same as local CLI.\n    * Create a persistent file:\n        ```bash\n        echo \"Hello CloudShell\" > demo.txt\n        echo \"This is the second line\" >> demo.txt\n        cat demo.txt\n        ```\n    * **[💡 Concept]**: CloudShell's `/home/cloudshell-user` directory is persistent, files remain after restart, suitable for storing common scripts.\n    * Try `Actions` > `Upload/Download file` in the top right corner.\n\n### Data Comparison Table\n\n| Module Name | Estimated Time | Budget Percentage | Current Status |\n| :--- | :--- | :--- | :--- |\n| User Authentication | 2 weeks | 15% | ✅ Done |\n| Payment Integration | 3 weeks | 25% | 🚧 In Progress |\n\n> \"The key to success lies in persistent optimization and iteration.\""

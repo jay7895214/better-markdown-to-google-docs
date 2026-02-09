@@ -13,7 +13,7 @@
 - ↔️ **可調整寬度** - 拖拉分隔線調整左右/上下面板比例
 - 🌐 **多語系支援** - 繁體中文 / English 切換，範例內容自動切換
 - 💾 **下載 HTML** - 可匯出為 HTML 檔案
-- 📈 **Google Analytics** - 內建流量追蹤
+- � **SEO 優化** - 內建 robots.txt、sitemap.xml、llm.txt
 
 ## 🚀 線上體驗
 

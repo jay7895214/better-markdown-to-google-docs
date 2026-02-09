@@ -1,0 +1,34 @@
+檔案說明robots.txt:放置路徑：專案根目錄 /作用：允許所有搜尋引擎索引你的網頁，並指定網站地圖路徑。llm.txt:放置路徑：專案根目錄 /作用：提供中英雙語的 Markdown 摘要，包含高權重關鍵字，優化 AI 檢索與 GEO 分數。1. robots.txt 內容User-agent: *
+Allow: /
+
+# Sitemap Location
+Sitemap: [https://jay7895214.github.io/better-markdown-to-google-docs/sitemap.xml](https://jay7895214.github.io/better-markdown-to-google-docs/sitemap.xml)
+2. llm.txt 內容 (Bilingual & SEO Optimized)# Better Markdown to Google Docs - Open Source Converter
+
+## English Version
+This is a high-performance **open source markdown to google docs converter** designed to help developers and writers **convert MD to Google Doc** without any extra add-ons. It specifically addresses common pain points such as **Google Docs markdown code block formatting** and the difficulty to **import markdown tables to Google Docs**.
+
+### Key Features
+- **Markdown to Google Docs without Add-on**: A pure web-based solution for seamless conversion.
+- **Advanced Formatting**: Perfect handling of **Google Docs markdown code block formatting** with syntax highlighting.
+- **Table Support**: Effortlessly **import markdown tables to Google Docs** with correct borders and alignment.
+- **Privacy First**: Client-side processing ensures your data never leaves your browser.
+
+---
+
+## 中文版本 (Traditional Chinese)
+這是一個高效能的開源 **Markdown to Google Docs** 轉換工具，旨在協助開發者將 **MD 轉換為 Google Doc (Convert MD to Google Doc)**，且完全**無需安裝任何外掛 (without Add-on)**。本工具特別解決了 **Google Docs 程式碼區塊格式 (code block formatting)** 跑掉以及難以**匯入 Markdown 表格 (Import Markdown tables)** 的常見問題。
+
+### 核心功能
+- **無需外掛的轉換工具**：直接在網頁端將 Markdown 轉為 Google 文件格式。
+- **進階格式處理**：完美支援 **Google Docs Markdown 程式碼區塊格式**，保留縮排與語法高亮。
+- **強大表格支援**：輕鬆將 **Markdown 表格匯入至 Google Docs** 並保持整齊的對齊與邊框。
+- **隱私安全**：所有解析均在瀏覽器本地完成，內容不會上傳至伺服器。
+
+---
+
+## Links & Metadata
+- **Live Tool**: [https://jay7895214.github.io/better-markdown-to-google-docs/](https://jay7895214.github.io/better-markdown-to-google-docs/)
+- **GitHub**: [https://github.com/jay7895214/better-markdown-to-google-docs](https://github.com/jay7895214/better-markdown-to-google-docs)
+- **Author**: jay7895214
+- **Keywords**: Markdown to Google Docs, Convert MD to Google Doc, Google Docs Markdown code block formatting, Import Markdown tables to Google Docs, Open source markdown to google docs converter.

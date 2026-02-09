@@ -255,7 +255,7 @@ const App = () => {
                     <div className="bg-blue-600 p-2 rounded-lg">
                         <FileText className="w-6 h-6 text-white" />
                     </div>
-                    <div>
+                    <div className="hidden md:block">
                         <h1 className="text-xl font-bold text-gray-800">{t('app.title')}</h1>
                     </div>
                 </div>
@@ -367,6 +367,27 @@ const App = () => {
                     </div>
                 </Panel>
             </Group>
+
+            {/* SEO Footer */}
+            <footer className="bg-gray-50 border-t border-gray-200 px-6 py-2 text-center text-xs text-gray-500">
+                <p className="hidden md:block max-w-4xl mx-auto">{t('app.footerDescription')}</p>
+                {/* Hidden keywords for SEO - visually hidden but accessible to crawlers */}
+                <p className="sr-only">
+                    Keywords: {t('app.footerKeywords')}
+                </p>
+                <p className="md:mt-1">
+                    <a
+                        href="https://github.com/jay7895214/better-markdown-to-google-docs"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:text-blue-600 hover:underline"
+                    >
+                        GitHub
+                    </a>
+                    <span className="mx-2">•</span>
+                    <span>MIT License</span>
+                </p>
+            </footer>
 
             {showToast && (
                 <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-xl flex items-center gap-3 animate-fade-in-up z-50">
