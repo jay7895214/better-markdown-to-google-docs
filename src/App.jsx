@@ -68,108 +68,78 @@ const App = () => {
     }, []);
 
 
+    const createCustomRenderer = () => {
+        if (!marked) return null;
+        const renderer = new marked.Renderer();
+
+        renderer.listitem = (text, task, checked) => {
+            if (task) {
+                const checkbox = checked ? '☑ ' : '☐ ';
+                return `<li style="list-style-type: none; text-indent: -1.4em; margin-left: 1.4em;">${checkbox} ${text}</li>`;
+            }
+            return `<li>${text}</li>`;
+        };
+
+        renderer.code = (code, language) => {
+            const escapedCode = code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+
+            const contentWithBreaks = escapedCode.split('\n').join('<br>');
+
+            return `<br><br><span style="display:inline-block;width:95%;background-color:#e0e0e0;border:1px solid #cccccc;padding:10pt;font-family:'Consolas','Courier New',monospace;font-size:10pt;color:#333;white-space:pre-wrap;box-sizing:border-box;line-height:1.2;">${contentWithBreaks}</span><br><br>`;
+        };
+
+        renderer.codespan = (text) => {
+            return `<code style="padding: 2px 4px; border-radius: 2px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.9em;">${text}</code>`;
+        };
+
+        renderer.strong = (text) => {
+            return `<strong style="font-weight: 700; color: #000;">${text}</strong>`;
+        };
+
+        renderer.em = (text) => {
+            return `<em style="font-style: italic;">${text}</em>`;
+        };
+
+        renderer.table = (header, body) => {
+            const colCount = (header.match(/<\/th>/g) || []).length;
+            const colWidth = colCount > 0 ? (16 / colCount).toFixed(2) + 'cm' : 'auto';
+            const headerWithWidth = header.replace(/<th([^>]*)style="/g, `<th$1style="width: ${colWidth}; `);
+
+            return `<div align="center" style="text-align:center;"><table class="data-table" style="border-collapse:collapse;margin:0 auto;text-align:left;table-layout:auto;"><thead>${headerWithWidth}</thead><tbody>${body}</tbody></table></div><br><br>`;
+        };
+
+        renderer.tablecell = (content, flags) => {
+            const type = flags.header ? 'th' : 'td';
+            const tag = type;
+            const align = flags.align ? flags.align : 'left';
+            const whiteSpace = flags.header ? 'nowrap' : 'normal';
+
+            const style = `border:1px solid #ccc;padding:2pt 6pt;vertical-align:middle;background-color:${flags.header ? '#f3f3f3' : 'transparent'};font-weight:${flags.header ? '700' : '400'};white-space:${whiteSpace};`;
+
+            const contentWrapped = `<p style="margin:0;text-align:${align};">${content}</p>`;
+
+            return `<${tag} style="${style}">${contentWrapped}</${tag}>`;
+        };
+
+        return renderer;
+    };
+
+    const renderMarkdown = (text) => {
+        if (!marked) return '';
+        marked.setOptions({ gfm: true, breaks: true });
+        const renderer = createCustomRenderer();
+        marked.use({ renderer });
+        return marked.parse(text);
+    };
+
     useEffect(() => {
         if (marked && markdown) {
-            marked.setOptions({
-                gfm: true,
-                breaks: true,
-            });
-
-            const renderer = new marked.Renderer();
-
-            renderer.listitem = (text, task, checked) => {
-                if (task) {
-                    const checkbox = checked ? '☑ ' : '☐ ';
-                    return `<li style="list-style-type: none; text-indent: -1.4em; margin-left: 1.4em;">${checkbox} ${text}</li>`;
-                }
-                return `<li>${text}</li>`;
-            };
-
-            renderer.code = (code, language) => {
-                const escapedCode = code
-                    .replace(/&/g, '&amp;')
-                    .replace(/</g, '&lt;')
-                    .replace(/>/g, '&gt;')
-                    .replace(/"/g, '&quot;')
-                    .replace(/'/g, '&#039;');
-
-                const contentWithBreaks = escapedCode.split('\n').join('<br>');
-
-                return `
-          <br><br>
-          <span style="
-            display: inline-block;
-            width: 95%;
-            background-color: #e0e0e0;
-            border: 1px solid #cccccc;
-            padding: 10pt;
-            font-family: 'Consolas', 'Courier New', monospace;
-            font-size: 10pt;
-            color: #333;
-            white-space: pre-wrap;
-            box-sizing: border-box;
-          ">${contentWithBreaks}</span>
-          <br><br>
-        `;
-            };
-
-            renderer.codespan = (text) => {
-                return `<code style="padding: 2px 4px; border-radius: 2px; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.9em;">${text}</code>`;
-            };
-
-            renderer.strong = (text) => {
-                return `<strong style="font-weight: 700; color: #000;">${text}</strong>`;
-            };
-
-            renderer.em = (text) => {
-                return `<em style="font-style: italic;">${text}</em>`;
-            };
-
-            renderer.table = (header, body) => {
-                const colCount = (header.match(/<\/th>/g) || []).length;
-                const colWidth = colCount > 0 ? (21 / colCount).toFixed(2) + 'cm' : 'auto';
-                const headerWithWidth = header.replace(/<th([^>]*)style="/g, `<th$1style="width: ${colWidth}; `);
-
-                return `
-          <div align="center" style="width: 100%; text-align: center;">
-            <table class="data-table" style="
-                border-collapse: collapse; 
-                width: 21cm;
-                margin: 0 auto;
-                text-align: left;
-                table-layout: fixed;
-            ">
-              <thead>${headerWithWidth}</thead>
-              <tbody>${body}</tbody>
-            </table>
-          </div>
-          <br><br>
-        `;
-            };
-
-            renderer.tablecell = (content, flags) => {
-                const type = flags.header ? 'th' : 'td';
-                const tag = type;
-                const align = flags.align ? flags.align : 'left';
-                const whiteSpace = flags.header ? 'nowrap' : 'normal';
-
-                const style = `
-          border: 1px solid #ccc; 
-          padding: 2pt 6pt;
-          vertical-align: middle;
-          background-color: ${flags.header ? '#f3f3f3' : 'transparent'}; 
-          font-weight: ${flags.header ? '700' : '400'};
-          white-space: ${whiteSpace};
-        `;
-
-                const contentWrapped = `<p style="margin: 0; text-align: ${align};">${content}</p>`;
-
-                return `<${tag} style="${style}">${contentWrapped}</${tag}>`;
-            };
-
-            marked.use({ renderer });
-
-            setHtmlContent(marked.parse(markdown));
+            setHtmlContent(renderMarkdown(markdown));
         } else if (!markdown) {
             setHtmlContent(`<p class="text-gray-400 italic">${t('app.previewPlaceholder')}</p>`);
         }
@@ -201,29 +171,18 @@ const App = () => {
         }
     };
 
-    const copyRichText = () => {
-        if (!previewRef.current) return;
-
-        const range = document.createRange();
-        range.selectNode(previewRef.current);
-
-        const selection = window.getSelection();
-        selection.removeAllRanges();
-        selection.addRange(range);
-
+    const copyRichText = async () => {
+        if (!htmlContent) return;
         try {
-            const successful = document.execCommand('copy');
-            if (successful) {
-                showNotification(t('app.copied'));
-            } else {
-                showNotification(t('app.copyFailed'));
-            }
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'text/html': blob })
+            ]);
+            showNotification(t('app.copied'));
         } catch (err) {
             console.error('Copy failed', err);
-            showNotification(t('app.notSupported'));
+            showNotification(t('app.copyFailed'));
         }
-
-        selection.removeAllRanges();
     };
 
     const clearContent = () => setMarkdown('');
@@ -247,10 +206,8 @@ const App = () => {
             const text = await navigator.clipboard.readText();
             setMarkdown(text);
 
-            // Render with the same marked settings
-            marked.setOptions({ gfm: true, breaks: true });
-            const renderer = new marked.Renderer();
-            const renderedHtml = marked.parse(text, { renderer });
+            // Render with the same custom renderer
+            const renderedHtml = renderMarkdown(text);
 
             // Write rich text back to clipboard
             const blob = new Blob([renderedHtml], { type: 'text/html' });
