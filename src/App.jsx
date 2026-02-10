@@ -29,7 +29,7 @@ const App = () => {
     const [htmlContent, setHtmlContent] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [toastMsg, setToastMsg] = useState('');
-    const [syncScroll, setSyncScroll] = useState(false);
+    const [syncScroll, setSyncScroll] = useState(true);
 
     const previewRef = useRef(null);
     const editorRef = useRef(null);
@@ -246,7 +246,7 @@ const App = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={quickConvert}
-                        className="bg-blue-600 p-2 rounded-lg cursor-pointer transition-transform duration-150 active:scale-75 hover:bg-blue-700"
+                        className="bg-blue-600 p-2 rounded-lg cursor-pointer transition-transform duration-150 active:scale-75 hover:bg-blue-700 logo-glow"
                         title={t('app.quickConvert')}
                     >
                         <FileText className="w-6 h-6 text-white" />
@@ -389,6 +389,8 @@ const App = () => {
                     </a>
                     <span className="mx-2">•</span>
                     <span>MIT License</span>
+                    <span className="mx-2">•</span>
+                    <span>v1.2.0</span>
                 </p>
             </footer>
 
@@ -464,6 +466,31 @@ const App = () => {
         }
         .animate-fade-in-up {
           animation: fade-in-up 0.3s ease-out forwards;
+        }
+
+        @keyframes gentle-glow {
+          0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
+          50% { box-shadow: 0 0 18px rgba(59, 130, 246, 0.7); }
+        }
+        .logo-glow {
+          animation: gentle-glow 2.5s ease-in-out infinite;
+          position: relative;
+          overflow: hidden;
+        }
+        .logo-glow::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+          animation: shine 4s ease-in-out infinite;
+        }
+
+        @keyframes shine {
+          0%, 75% { transform: translateX(-150%); }
+          100% { transform: translateX(350%); }
         }
       `}</style>
         </div>
