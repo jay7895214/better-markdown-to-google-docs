@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off, GripVertical, GripHorizontal } from 'lucide-react';
+import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off, GripVertical, GripHorizontal, ClipboardPaste } from 'lucide-react';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 
 const useMarked = () => {
@@ -230,6 +230,41 @@ const App = () => {
 
     const loadExample = () => setMarkdown(t('example.content'));
 
+    const pasteFromClipboard = async () => {
+        try {
+            const text = await navigator.clipboard.readText();
+            setMarkdown(text);
+            showNotification(t('app.pasted'));
+        } catch (err) {
+            console.error('Paste failed', err);
+            showNotification(t('app.pasteFailed'));
+        }
+    };
+
+    const quickConvert = async () => {
+        if (!marked) return;
+        try {
+            const text = await navigator.clipboard.readText();
+            setMarkdown(text);
+
+            // Render with the same marked settings
+            marked.setOptions({ gfm: true, breaks: true });
+            const renderer = new marked.Renderer();
+            const renderedHtml = marked.parse(text, { renderer });
+
+            // Write rich text back to clipboard
+            const blob = new Blob([renderedHtml], { type: 'text/html' });
+            await navigator.clipboard.write([
+                new ClipboardItem({ 'text/html': blob })
+            ]);
+
+            showNotification(t('app.quickConverted'));
+        } catch (err) {
+            console.error('Quick convert failed', err);
+            showNotification(t('app.quickConvertFailed'));
+        }
+    };
+
     const showNotification = (msg) => {
         setToastMsg(msg);
         setShowToast(true);
@@ -252,9 +287,13 @@ const App = () => {
         <div className="flex flex-col h-screen bg-gray-50 text-gray-800 font-sans">
             <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between shadow-sm z-10">
                 <div className="flex items-center gap-3">
-                    <div className="bg-blue-600 p-2 rounded-lg">
+                    <button
+                        onClick={quickConvert}
+                        className="bg-blue-600 p-2 rounded-lg cursor-pointer transition-transform duration-150 active:scale-75 hover:bg-blue-700"
+                        title={t('app.quickConvert')}
+                    >
                         <FileText className="w-6 h-6 text-white" />
-                    </div>
+                    </button>
                     <div className="hidden md:block">
                         <h1 className="text-xl font-bold text-gray-800">{t('app.title')}</h1>
                     </div>
@@ -299,8 +338,15 @@ const App = () => {
             <Group orientation={isMobile ? 'vertical' : 'horizontal'} className="flex-1 overflow-hidden">
                 {/* Markdown Input Panel */}
                 <Panel defaultSize={50} minSize={20} className="flex flex-col bg-white">
-                    <div className="h-10 px-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex items-center">
+                    <div className="h-10 px-4 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider flex justify-between items-center">
                         <span>{t('app.markdownInput')}</span>
+                        <button
+                            onClick={pasteFromClipboard}
+                            className="flex items-center justify-center w-8 h-8 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                            title={t('app.paste')}
+                        >
+                            <ClipboardPaste className="w-4 h-4" />
+                        </button>
                     </div>
                     <textarea
                         ref={editorRef}
@@ -339,7 +385,7 @@ const App = () => {
                             </button>
                             <button
                                 onClick={copyRichText}
-                                className="flex items-center justify-center w-8 h-8 text-white bg-blue-600 hover:bg-blue-700 rounded transition-all active:scale-95"
+                                className="flex items-center justify-center w-8 h-8 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                                 title={t('app.copyFormat')}
                             >
                                 <Copy className="w-4 h-4" />

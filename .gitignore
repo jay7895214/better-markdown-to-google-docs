@@ -33,3 +33,6 @@ coverage
 
 # Build cache
 .cache
+
+# Development logs
+docs/
