@@ -73,11 +73,20 @@ const App = () => {
         const renderer = new marked.Renderer();
 
         renderer.listitem = (text, task, checked) => {
+            // Strip <p> wrappers that marked adds for "loose" list items
+            // These cause extra spacing in Google Docs
+            const cleanText = text.replace(/<p>([\s\S]*?)<\/p>/g, '$1');
             if (task) {
                 const checkbox = checked ? '☑ ' : '☐ ';
-                return `<li style="list-style-type: none; text-indent: -1.4em; margin-left: 1.4em;">${checkbox} ${text}</li>`;
+                return `<li style="list-style-type: none; text-indent: -1.4em; margin-left: 1.4em;">${checkbox} ${cleanText}</li>`;
             }
-            return `<li>${text}</li>`;
+            return `<li>${cleanText}</li>`;
+        };
+
+        renderer.list = (body, ordered, start) => {
+            const tag = ordered ? 'ol' : 'ul';
+            const startAttr = ordered && start !== 1 ? ` start="${start}"` : '';
+            return `<${tag}${startAttr} style="margin-top:0;margin-bottom:0;padding-left:36pt;">${body}</${tag}>`;
         };
 
         renderer.code = (code, language) => {
