@@ -399,7 +399,7 @@ const App = () => {
                     <span className="mx-2">•</span>
                     <span>MIT License</span>
                     <span className="mx-2">•</span>
-                    <span>v1.2.0</span>
+                    <span>v1.3.0</span>
                 </p>
             </footer>
 
