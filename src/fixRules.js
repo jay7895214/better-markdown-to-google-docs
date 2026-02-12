@@ -50,15 +50,23 @@ export const fixRules = [
 function fixBoldFlanking(text) {
     return text.replace(/\*\*([^*\n]+)\*\*/g, (match, content, offset, str) => {
         const charBefore = offset > 0 ? str[offset - 1] : '';
+        const charAfter = str[offset + match.length] || '';
         const firstChar = content[0];
+        const lastChar = content[content.length - 1];
 
-        // CommonMark: ** followed by punctuation → needs whitespace/punctuation before it
-        const needsSpace = charBefore &&
+        // Opening **: when followed by punctuation, needs whitespace/punctuation before it
+        const needsSpaceBefore = charBefore &&
             !/\s/.test(charBefore) &&
             !/[\p{P}]/u.test(charBefore) &&
             /[\p{P}]/u.test(firstChar);
 
-        return (needsSpace ? '\u200B ' : '') + match;
+        // Closing **: when preceded by punctuation, needs whitespace/punctuation after it
+        const needsSpaceAfter = charAfter &&
+            !/\s/.test(charAfter) &&
+            !/[\p{P}]/u.test(charAfter) &&
+            /[\p{P}]/u.test(lastChar);
+
+        return (needsSpaceBefore ? '\u200B ' : '') + match + (needsSpaceAfter ? ' \u200B' : '');
     });
 }
 
@@ -68,10 +76,16 @@ function fixBoldFlanking(text) {
 // ==========================================
 export const postFixRules = [
     {
-        name: 'remove-bold-fix-marker',
+        name: 'remove-bold-fix-marker-before',
         pattern: /\u200B /g,
         replace: '',
-        description: 'Remove zero-width space marker + space added by bold fix',
+        description: 'Remove marker + space added before opening **',
+    },
+    {
+        name: 'remove-bold-fix-marker-after',
+        pattern: / \u200B/g,
+        replace: '',
+        description: 'Remove space + marker added after closing **',
     },
 ];
 
