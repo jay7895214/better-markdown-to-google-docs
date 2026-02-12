@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off, GripVertical, GripHorizontal, ClipboardPaste } from 'lucide-react';
+import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off, GripVertical, GripHorizontal, ClipboardPaste, Wand2 } from 'lucide-react';
+import { applyFixRules, applyPostFixRules } from './fixRules';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 
 const useMarked = () => {
@@ -30,6 +31,7 @@ const App = () => {
     const [showToast, setShowToast] = useState(false);
     const [toastMsg, setToastMsg] = useState('');
     const [syncScroll, setSyncScroll] = useState(true);
+    const [autoFix, setAutoFix] = useState(false);
 
     const previewRef = useRef(null);
     const editorRef = useRef(null);
@@ -148,11 +150,14 @@ const App = () => {
 
     useEffect(() => {
         if (marked && markdown) {
-            setHtmlContent(renderMarkdown(markdown));
+            const textToRender = autoFix ? applyFixRules(markdown) : markdown;
+            let html = renderMarkdown(textToRender);
+            if (autoFix) html = applyPostFixRules(html);
+            setHtmlContent(html);
         } else if (!markdown) {
             setHtmlContent(`<p class="text-gray-400 italic">${t('app.previewPlaceholder')}</p>`);
         }
-    }, [markdown, marked, t]);
+    }, [markdown, marked, t, autoFix]);
 
     const handleEditorScroll = () => {
         if (!syncScroll || isScrollingRef.current === 'preview') return;
@@ -215,8 +220,10 @@ const App = () => {
             const text = await navigator.clipboard.readText();
             setMarkdown(text);
 
-            // Render with the same custom renderer
-            const renderedHtml = renderMarkdown(text);
+            // Render with the same custom renderer (apply fix if enabled)
+            const textToRender = autoFix ? applyFixRules(text) : text;
+            let renderedHtml = renderMarkdown(textToRender);
+            if (autoFix) renderedHtml = applyPostFixRules(renderedHtml);
 
             // Write rich text back to clipboard
             const blob = new Blob([renderedHtml], { type: 'text/html' });
@@ -255,7 +262,10 @@ const App = () => {
                 <div className="flex items-center gap-3">
                     <button
                         onClick={quickConvert}
-                        className="bg-blue-600 p-2 rounded-lg cursor-pointer transition-transform duration-150 active:scale-75 hover:bg-blue-700 logo-glow"
+                        className={`p-2 rounded-lg cursor-pointer transition-all duration-150 active:scale-75 ${autoFix
+                            ? 'bg-amber-500 hover:bg-amber-600 logo-glow-amber'
+                            : 'bg-blue-600 hover:bg-blue-700 logo-glow'
+                            }`}
                         title={t('app.quickConvert')}
                     >
                         <FileText className="w-6 h-6 text-white" />
@@ -282,6 +292,16 @@ const App = () => {
                         title={t('app.syncScroll')}
                     >
                         {syncScroll ? <Link2 className="w-5 h-5" /> : <Link2Off className="w-5 h-5" />}
+                    </button>
+                    <button
+                        onClick={() => setAutoFix(!autoFix)}
+                        className={`flex items-center justify-center w-10 h-10 rounded-md transition-colors border ${autoFix
+                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : 'bg-white text-gray-500 border-gray-200 hover:bg-gray-50'
+                            }`}
+                        title={t('app.autoFix')}
+                    >
+                        <Wand2 className="w-5 h-5" />
                     </button>
                     <div className="h-6 w-px bg-gray-300 mx-1"></div>
                     <button
@@ -399,7 +419,7 @@ const App = () => {
                     <span className="mx-2">•</span>
                     <span>MIT License</span>
                     <span className="mx-2">•</span>
-                    <span>v1.3.0</span>
+                    <span>v1.4.0</span>
                 </p>
             </footer>
 
@@ -481,12 +501,21 @@ const App = () => {
           0%, 100% { box-shadow: 0 0 8px rgba(59, 130, 246, 0.4); }
           50% { box-shadow: 0 0 18px rgba(59, 130, 246, 0.7); }
         }
+        @keyframes gentle-glow-amber {
+          0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
+          50% { box-shadow: 0 0 18px rgba(245, 158, 11, 0.7); }
+        }
         .logo-glow {
           animation: gentle-glow 2.5s ease-in-out infinite;
           position: relative;
           overflow: hidden;
         }
-        .logo-glow::after {
+        .logo-glow-amber {
+          animation: gentle-glow-amber 2.5s ease-in-out infinite;
+          position: relative;
+          overflow: hidden;
+        }
+        .logo-glow::after, .logo-glow-amber::after {
           content: '';
           position: absolute;
           top: 0;

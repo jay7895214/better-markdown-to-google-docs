@@ -16,6 +16,7 @@
 - 🌐 **多語系支援** - 繁體中文 / English 切換，範例內容自動切換
 - 💾 **下載 HTML** - 可匯出為 HTML 檔案
 - 🔍 **SEO 優化** - 內建 robots.txt、sitemap.xml、llm.txt
+- 🪄 **自動修正** - 一鍵修復常見 Markdown 格式錯誤（粗體邊界、表格斷行等）
 
 ## 🚀 線上體驗
 

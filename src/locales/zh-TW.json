@@ -2,6 +2,7 @@
     "app": {
         "title": "Better Markdown to Google Docs",
         "syncScroll": "同步滾動",
+        "autoFix": "自動修正（修復常見 Markdown 格式錯誤）",
         "example": "範例",
         "clear": "清空",
         "markdownInput": "Markdown 輸入",
@@ -27,6 +28,6 @@
         "footerKeywords": "Markdown, Google Docs, 轉換工具, MD轉Google Doc, 表格匯入, 程式碼區塊"
     },
     "example": {
-        "content": "# Better Markdown to Google Docs\n\n一款強大且重視隱私的工具，將 Markdown 轉換為 Google Docs 完美格式。無需安裝任何外掛。\n\n## 🚀 主要功能\n\n*   **一鍵複製**：自動格式化 Markdown，可直接貼上 Google Docs。\n*   **隱私優先**：所有處理皆在瀏覽器端完成，資料不會傳送至伺服器。\n*   **智慧格式**：\n    *   完整支援 `程式碼區塊` 與語法高亮\n    *   最佳化表格欄寬\n    *   支援 **巢狀清單** 與 [待辦事項]\n\n## 📝 如何使用\n\n1.  **貼上** 您的 Markdown 到左側面板（或直接輸入）。\n2.  於右側面板 **預覽** 結果。\n3.  **點擊**「複製」或「快速轉換」按鈕。\n4.  **貼上** 到您的 Google 文件中！\n\n## 💻 程式碼範例\n\n```javascript\nfunction sayHello(name) {\n    console.log(`Hello, ${name}!`);\n    return true;\n}\n```\n\n## 📊 功能比較表\n\n| 功能 | 一般貼上 | Better MD to Docs |\n| :--- | :--- | :--- |\n| 程式碼背景色 | ❌ 純文字 | ✅ 灰色底色 |\n| 表格寬度 | ❌ 常跑版 | ✅ A4 最佳化 |\n| 清單間距 | ❌ 過寬 | ✅ 最佳化 |\n\n> \"這就是您期待已久的流暢工作流。\"\n\n---\n*MIT 授權開源專案。*"
+        "content": "# Better Markdown to Google Docs\n\n一款強大且重視隱私的工具，將 Markdown 轉換為 Google Docs 完美格式。無需安裝任何外掛。\n\n## 🚀 主要功能\n\n*   **一鍵複製**：自動格式化 Markdown，可直接貼上 Google Docs。\n*   **隱私優先**：所有處理皆在瀏覽器端完成，資料不會傳送至伺服器。\n*   **自動修正**：一鍵修復常見 Markdown 格式錯誤（粗體邊界、表格斷行等）\n*   **智慧格式**：\n    *   完整支援 `程式碼區塊` 與語法高亮\n    *   最佳化表格欄寬\n    *   支援 **巢狀清單** 與 [待辦事項]\n\n## 📝 如何使用\n\n1.  **貼上** 您的 Markdown 到左側面板（或直接輸入）。\n2.  於右側面板 **預覽** 結果。\n3.  **點擊**「複製」或「快速轉換」按鈕。\n4.  **貼上** 到您的 Google 文件中！\n\n## 💻 程式碼範例\n\n```javascript\nfunction sayHello(name) {\n    console.log(`Hello, ${name}!`);\n    return true;\n}\n```\n\n## 📊 功能比較表\n\n| 功能 | 一般貼上 | Better MD to Docs |\n| :--- | :--- | :--- |\n| 程式碼背景色 | ❌ 純文字 | ✅ 灰色底色 |\n| 表格寬度 | ❌ 常跑版 | ✅ A4 最佳化 |\n| 清單間距 | ❌ 過寬 | ✅ 最佳化 |\n| 自動修正 | ❌ 手動 | ✅ 一鍵修復 |\n\n> \"這就是您期待已久的流暢工作流。\"\n\n---\n*MIT 授權開源專案。*"
     }
 }
