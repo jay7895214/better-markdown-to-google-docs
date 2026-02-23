@@ -31,7 +31,7 @@ const App = () => {
     const [showToast, setShowToast] = useState(false);
     const [toastMsg, setToastMsg] = useState('');
     const [syncScroll, setSyncScroll] = useState(true);
-    const [autoFix, setAutoFix] = useState(false);
+    const [autoFix, setAutoFix] = useState(true);
 
     const previewRef = useRef(null);
     const editorRef = useRef(null);
@@ -419,7 +419,7 @@ const App = () => {
                     <span className="mx-2">•</span>
                     <span>MIT License</span>
                     <span className="mx-2">•</span>
-                    <span>v1.4.1</span>
+                    <span>v1.5.0</span>
                 </p>
             </footer>
 

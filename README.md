@@ -1,52 +1,55 @@
+[繁體中文](./README.zh-TW.md) | English
+
 # Better Markdown to Google Docs Converter
 
-將 Markdown 轉換成可直接貼上到 Google Docs 的格式化富文本。
+Convert Markdown into formatted rich text that can be pasted directly into Google Docs.
 
 [![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-blue)](https://jay7895214.github.io/better-markdown-to-google-docs/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-## ✨ 功能特色
+## ✨ Features
 
-- 📝 **即時預覽** - 左右分欄顯示 Markdown 編輯與格式化預覽
-- 📋 **一鍵複製** - 複製格式化內容，直接貼上至 Google Docs
-- 📎 **貼上剪貼簿** - 一鍵貼上剪貼簿中的 Markdown 內容
-- ⚡ **快速轉換** - 點擊 Logo 直接轉換剪貼簿內容並複製回剪貼簿
-- 📊 **表格支援** - 自動均分欄寬 (16cm/n)，完美貼合 A4 頁面
-- 🔗 **同步滾動** - 編輯區與預覽區可同步捲動
-- ↔️ **可調整寬度** - 拖拉分隔線調整左右/上下面板比例
-- 🌐 **多語系支援** - 繁體中文 / English 切換，範例內容自動切換
-- 💾 **下載 HTML** - 可匯出為 HTML 檔案
-- 🔍 **SEO 優化** - 內建 robots.txt、sitemap.xml、llm.txt
-- 🪄 **自動修正** - 一鍵修復常見 Markdown 格式錯誤（粗體邊界、表格斷行等）
+- 📝 **Live Preview** – Side-by-side Markdown editing and formatted preview
+- 📋 **One-Click Copy** – Copy formatted content, paste directly into Google Docs
+- 📎 **Paste from Clipboard** – One-click paste Markdown from clipboard
+- ⚡ **Quick Convert** – Click the logo to convert clipboard content and copy back
+- 📊 **Table Support** – Auto-distribute column widths (16 cm / n), optimized for A4
+- 🔗 **Sync Scroll** – Editor and preview panels scroll together
+- ↔️ **Resizable Panels** – Drag the divider to adjust panel proportions
+- 🌐 **Multilingual** – Toggle between 繁體中文 and English
+- 💾 **Download HTML** – Export as an HTML file
+- 🔍 **SEO Optimized** – Built-in robots.txt, sitemap.xml, llm.txt
+- 🪄 **Auto Fix** – One-click fix for common Markdown errors (bold boundaries, broken tables, etc.)
 
-## 🚀 線上體驗
+## 🚀 Live Demo
 
-**[👉 點此開啟應用程式](https://jay7895214.github.io/better-markdown-to-google-docs/)**
+**[👉 Open the App](https://jay7895214.github.io/better-markdown-to-google-docs/)**
 
-## 🛠️ 本地開發
+## 🛠️ Local Development
 
 ```bash
-# 安裝相依套件
+# Install dependencies
 npm install
 
-# 啟動開發伺服器
+# Start dev server
 npm run dev
 
-# 建置生產版本
+# Production build
 npm run build
 
-# 部署到 GitHub Pages
+# Deploy to GitHub Pages
 npm run deploy
 ```
 
-## 📦 技術棧
+## 📦 Tech Stack
 
-- **框架**: React 19 + Vite
-- **樣式**: Tailwind CSS
-- **Markdown 解析**: marked.js
-- **圖示**: Lucide React
-- **國際化**: react-i18next
-- **部署**: GitHub Pages
+- **Framework**: React 19 + Vite
+- **Styling**: Tailwind CSS
+- **Markdown Parser**: marked.js
+- **Icons**: Lucide React
+- **i18n**: react-i18next
+- **Deployment**: GitHub Pages
 
 ## 📄 License
 
-MIT
+[MIT](./LICENSE)
