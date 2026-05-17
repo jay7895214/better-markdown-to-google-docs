@@ -5,10 +5,10 @@
  * - $...$   → inline math
  * - $$...$$ → block (display) math
  *
- * Uses KaTeX for rendering and html-to-image for PNG conversion (clipboard).
+ * Uses KaTeX for rendering. For clipboard copy (Google Docs), renders KaTeX to
+ * a hidden DOM element, then captures via canvas with SVG foreignObject approach.
+ * This avoids html-to-image's CORS issues with CDN stylesheets.
  */
-
-import { toPng } from 'html-to-image';
 
 // Unique prefix to avoid collisions with user content
 const MATH_PLACEHOLDER_PREFIX = '\u0000MATH_';
@@ -110,68 +110,158 @@ export function replaceMathWithKatex(html, expressions, katex) {
     return result;
 }
 
+// ─── Image conversion (for clipboard / Google Docs) ───────────────────────
+
 /**
- * Wait for KaTeX web fonts to be fully loaded.
- * KaTeX uses custom fonts (KaTeX_Main, KaTeX_Math, etc.) loaded via CSS @font-face.
- * These must be available before capturing to PNG.
+ * Cached KaTeX CSS text fetched from the CDN. Fetched once and reused.
+ * @type {string|null}
  */
-async function waitForKatexFonts() {
-    await document.fonts.ready;
+let _katexCssCache = null;
 
-    // Additionally load specific KaTeX font families used in math rendering
-    const katexFontFamilies = [
-        'KaTeX_Main',
-        'KaTeX_Math',
-        'KaTeX_Size1',
-        'KaTeX_Size2',
-    ];
+/**
+ * Fetch the KaTeX CSS and inline all font references as base64 data URIs.
+ * This makes the SVG foreignObject fully self-contained (no cross-origin resources),
+ * preventing the canvas from being tainted.
+ */
+async function getKatexCss() {
+    if (_katexCssCache) return _katexCssCache;
 
-    const fontPromises = katexFontFamilies.map(family => {
-        return document.fonts.load(`16px "${family}"`).catch(() => {
-            // Font may not be needed for this expression
-        });
-    });
+    try {
+        const res = await fetch('https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css');
+        let css = await res.text();
 
-    await Promise.all(fontPromises);
+        // Find all font URLs and convert to base64 data URIs
+        const fontUrlRegex = /url\(fonts\/([^)]+)\)/g;
+        const fontUrls = new Set();
+        let match;
+        while ((match = fontUrlRegex.exec(css)) !== null) {
+            fontUrls.add(match[1]);
+        }
+
+        // Fetch each unique font file and convert to base64
+        const fontMap = new Map();
+        await Promise.all(
+            [...fontUrls].map(async (fontPath) => {
+                try {
+                    const fontRes = await fetch(
+                        `https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/fonts/${fontPath}`
+                    );
+                    const buffer = await fontRes.arrayBuffer();
+                    const base64 = btoa(
+                        String.fromCharCode(...new Uint8Array(buffer))
+                    );
+                    const ext = fontPath.split('.').pop().split('?')[0];
+                    const mime = ext === 'woff2' ? 'font/woff2' : 'font/woff';
+                    fontMap.set(fontPath, `data:${mime};base64,${base64}`);
+                } catch {
+                    // If a font fails to load, skip it (fallback fonts will be used)
+                }
+            })
+        );
+
+        // Replace all font URLs with their base64 data URIs
+        for (const [fontPath, dataUri] of fontMap) {
+            css = css.replaceAll(`url(fonts/${fontPath})`, `url(${dataUri})`);
+        }
+
+        _katexCssCache = css;
+        return css;
+    } catch (e) {
+        console.warn('Failed to fetch KaTeX CSS for image conversion:', e);
+        return '';
+    }
 }
 
 /**
- * Convert a single KaTeX-rendered element to a PNG data URI.
- * Uses triple-call technique: calls progressively cache fonts and stabilize rendering.
+ * Convert a single KaTeX expression to a PNG data URI.
  *
- * @param {HTMLElement} element - DOM element containing KaTeX output
- * @param {number} scale - Pixel density scale (default 3x for clarity in Google Docs)
- * @returns {Promise<string>} PNG data URI
+ * Approach: render KaTeX HTML into an offscreen DOM element, measure it,
+ * then use SVG foreignObject + canvas to rasterize — no html-to-image needed.
+ *
+ * @param {string} latex - LaTeX expression
+ * @param {boolean} displayMode - true for block math
+ * @param {object} katex - KaTeX library instance
+ * @param {string} katexCss - Inlined KaTeX CSS text
+ * @returns {Promise<{dataUri: string, width: number, height: number}>}
  */
-async function elementToPng(element, scale = 3) {
-    const options = {
-        pixelRatio: scale,
-        backgroundColor: '#ffffff',
-        style: {
-            margin: '0',
-            padding: '4px 16px',
-            overflow: 'visible',
-        },
-    };
+async function latexToPng(latex, displayMode, katex, katexCss) {
+    const scale = 3; // 3x for high-DPI clarity
 
-    // Triple-call technique: each call progressively loads/caches fonts
-    for (let i = 0; i < 2; i++) {
-        try {
-            await toPng(element, options);
-        } catch {
-            // Early calls may fail — expected
-        }
-    }
+    // 1. Render KaTeX to HTML string
+    const katexHtml = katex.renderToString(latex, {
+        displayMode,
+        throwOnError: false,
+        output: 'html',
+    });
 
-    // Final call captures with fonts fully embedded
-    return await toPng(element, options);
+    // 2. Create a temporary hidden container to measure rendered size
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-9999px;top:-9999px;z-index:-1;visibility:hidden;';
+    container.style.fontSize = '16px';
+    container.style.fontFamily = 'Arial, sans-serif';
+
+    const inner = document.createElement('div');
+    inner.innerHTML = katexHtml;
+    inner.style.display = 'inline-block';
+    inner.style.padding = '4px 8px';
+    inner.style.whiteSpace = 'nowrap';
+    if (displayMode) inner.style.fontSize = '1.21em';
+    container.appendChild(inner);
+    document.body.appendChild(container);
+
+    // Wait for fonts and layout
+    await document.fonts.ready;
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    const rect = inner.getBoundingClientRect();
+    const width = Math.ceil(rect.width) + 16;  // extra padding
+    const height = Math.ceil(rect.height) + 8;
+
+    document.body.removeChild(container);
+
+    // 3. Build an SVG with foreignObject containing the KaTeX HTML + inlined CSS
+    const svgHtml = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+            <foreignObject width="100%" height="100%">
+                <div xmlns="http://www.w3.org/1999/xhtml" style="font-size:16px;font-family:Arial,sans-serif;">
+                    <style>${katexCss}</style>
+                    <div style="display:inline-block;padding:4px 8px;white-space:nowrap;${displayMode ? 'font-size:1.21em;' : ''}">${katexHtml}</div>
+                </div>
+            </foreignObject>
+        </svg>`;
+
+    // 4. Render SVG to canvas
+    const blob = new Blob([svgHtml], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const dataUri = await new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = width * scale;
+            canvas.height = height * scale;
+            const ctx = canvas.getContext('2d');
+            ctx.scale(scale, scale);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            ctx.drawImage(img, 0, 0, width, height);
+            URL.revokeObjectURL(url);
+            resolve(canvas.toDataURL('image/png'));
+        };
+        img.onerror = (e) => {
+            URL.revokeObjectURL(url);
+            reject(new Error('SVG to canvas failed'));
+        };
+        img.src = url;
+    });
+
+    return { dataUri, width, height };
 }
 
 /**
  * Replace math placeholders with PNG <img> tags (for clipboard/Google Docs).
- * Creates temporary DOM elements, renders with KaTeX, captures as images.
  *
- * @param {string} html - Rendered HTML from marked (with KaTeX placeholders or KaTeX HTML)
+ * @param {string} html - Rendered HTML from marked (with KaTeX HTML)
  * @param {Array} expressions - Math expressions from extractMath()
  * @param {object} katex - KaTeX library instance
  * @returns {Promise<string>} HTML with math rendered as <img> tags
@@ -179,58 +269,30 @@ async function elementToPng(element, scale = 3) {
 export async function replaceMathWithImages(html, expressions, katex) {
     if (!katex || expressions.length === 0) return html;
 
-    // Ensure KaTeX fonts are loaded before any conversion
-    await waitForKatexFonts();
+    // Pre-fetch KaTeX CSS once (cached for subsequent calls)
+    const katexCss = await getKatexCss();
 
     let result = html;
 
     for (const expr of expressions) {
         try {
-            // Create a temporary offscreen container with generous sizing
-            const container = document.createElement('div');
-            container.style.cssText = 'position:fixed;left:-9999px;top:-9999px;z-index:-1;';
-            container.style.fontSize = '16px';
-            container.style.fontFamily = 'Arial, sans-serif';
-            container.style.lineHeight = '1.5';
+            const { dataUri, height } = await latexToPng(
+                expr.latex, expr.displayMode, katex, katexCss
+            );
 
-            // Render with KaTeX
+            // Build <img> tag
+            const imgStyle = expr.displayMode
+                ? 'display:block;margin:12pt auto;'
+                : `display:inline;vertical-align:middle;height:${height}px;`;
+            const imgTag = `<img src="${dataUri}" alt="${expr.latex.replace(/"/g, '&quot;')}" style="${imgStyle}" />`;
+
+            // Find and replace the KaTeX HTML wrapper
             const katexHtml = katex.renderToString(expr.latex, {
                 displayMode: expr.displayMode,
                 throwOnError: false,
                 output: 'html',
             });
 
-            const inner = document.createElement('div');
-            inner.innerHTML = katexHtml;
-            inner.style.display = 'inline-block';
-            inner.style.padding = '4px 16px';
-            inner.style.overflow = 'visible';
-            inner.style.whiteSpace = 'nowrap';
-            if (expr.displayMode) {
-                inner.style.fontSize = '1.21em';
-            }
-            container.appendChild(inner);
-            document.body.appendChild(container);
-
-            // Give the browser a frame to layout and load fonts
-            await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-            await document.fonts.ready;
-
-            // Convert to PNG
-            const dataUri = await elementToPng(inner);
-
-            // Measure the rendered size for proper img dimensions
-            const rect = inner.getBoundingClientRect();
-
-            document.body.removeChild(container);
-
-            // Build <img> tag with natural dimensions to avoid distortion
-            const imgStyle = expr.displayMode
-                ? `display:block;margin:12pt auto;`
-                : `display:inline;vertical-align:middle;height:${Math.ceil(rect.height)}px;`;
-            const imgTag = `<img src="${dataUri}" alt="${expr.latex.replace(/"/g, '&quot;')}" style="${imgStyle}" />`;
-
-            // Find and replace the KaTeX HTML wrapper or placeholder
             if (expr.displayMode) {
                 const blockPattern = `<div class="math-block" style="text-align:center;margin:12pt 0;overflow-x:auto;">${katexHtml}</div>`;
                 if (result.includes(blockPattern)) {
