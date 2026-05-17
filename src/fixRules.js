@@ -22,7 +22,8 @@ export const fixRules = [
     // --- Unordered list ---
     {
         name: 'unordered-list-spacing',
-        pattern: /^(\s*[*\-+])([^\s*\-+])/gm,
+        // Negative lookahead: skip lines where * is used as emphasis (another * exists later)
+        pattern: /^(?!\s*\*[^*\n]*\*)(\s*[*\-+])([^\s*\-+])/gm,
         replace: '$1 $2',
         description: 'Add space after list marker: *item → * item',
     },
@@ -88,6 +89,95 @@ export const postFixRules = [
         description: 'Remove space + marker added after closing **',
     },
 ];
+
+// ==========================================
+// Footnote processing
+// marked.js doesn't support footnote syntax ([^N] / [^N]: content).
+// We handle it with custom pre/post processing.
+// ==========================================
+
+/**
+ * Extract footnote definitions from Markdown text.
+ * Matches lines like: [^1]: content  or  [^1]：content
+ * Supports both half-width (:) and full-width (：) colons.
+ * Handles multi-line definitions (continuation lines indented with spaces/tabs).
+ *
+ * @param {string} text - Raw Markdown text
+ * @returns {{ cleanedText: string, footnotes: Map<string, string> }}
+ */
+export function extractFootnotes(text) {
+    const footnotes = new Map();
+    const lines = text.split('\n');
+    const cleanedLines = [];
+    let currentId = null;
+    let currentContent = '';
+
+    const save = () => {
+        if (currentId !== null) {
+            footnotes.set(currentId, currentContent.trim());
+            currentId = null;
+            currentContent = '';
+        }
+    };
+
+    for (const line of lines) {
+        const match = line.match(/^\[\^([^\]]+)\][：:]\s*(.*)/);
+
+        if (match) {
+            save();
+            currentId = match[1];
+            currentContent = match[2];
+        } else if (currentId !== null && /^[ \t]/.test(line) && line.trim() !== '') {
+            currentContent += ' ' + line.trim();
+        } else {
+            save();
+            cleanedLines.push(line);
+        }
+    }
+    save();
+
+    return { cleanedText: cleanedLines.join('\n'), footnotes };
+}
+
+/**
+ * Replace footnote references [^N] in Markdown text with superscript HTML.
+ * Must run BEFORE marked.parse() to prevent marked from interpreting them as links.
+ *
+ * @param {string} text - Markdown text (after footnote definitions removed)
+ * @returns {string}
+ */
+export function replaceFootnoteRefs(text) {
+    return text.replace(
+        /\[\^([^\]]+)\]/g,
+        '<sup style="font-size:0.7em;color:#1155cc;">[$1]</sup>'
+    );
+}
+
+/**
+ * Append a formatted footnote section to rendered HTML.
+ *
+ * @param {string} html - Rendered HTML
+ * @param {Map<string, string>} footnotes - Footnote id → content map
+ * @param {function} [renderInline] - Optional function to render inline Markdown in footnote content
+ * @returns {string}
+ */
+export function appendFootnoteSection(html, footnotes, renderInline) {
+    if (footnotes.size === 0) return html;
+
+    const sorted = [...footnotes.entries()].sort((a, b) => {
+        const na = parseInt(a[0]), nb = parseInt(b[0]);
+        if (!isNaN(na) && !isNaN(nb)) return na - nb;
+        return a[0].localeCompare(b[0]);
+    });
+
+    let section = '';
+    for (const [id, content] of sorted) {
+        const rendered = renderInline ? renderInline(content) : content;
+        section += `<p style="font-size:9pt;margin-bottom:4pt;margin-top:0;color:#333;"><sup style="font-size:0.7em;">[${id}]</sup>: ${rendered}</p>`;
+    }
+
+    return html + section;
+}
 
 /**
  * Fix broken table rows.
