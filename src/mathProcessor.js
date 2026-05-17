@@ -175,12 +175,12 @@ export async function replaceMathWithImages(html, expressions, katex) {
 
     for (const expr of expressions) {
         try {
-            const { dataUri, height } = await latexToPng(expr.latex, expr.displayMode);
+            const { dataUri, width, height } = await latexToPng(expr.latex, expr.displayMode);
 
             const imgStyle = expr.displayMode
                 ? 'display:block;margin:12pt auto;'
                 : `display:inline;vertical-align:middle;height:${height}px;`;
-            const imgTag = `<img src="${dataUri}" alt="${expr.latex.replace(/"/g, '&quot;')}" style="${imgStyle}" />`;
+            const imgTag = `<img src="${dataUri}" width="${width}" height="${height}" alt="${expr.latex.replace(/"/g, '&quot;')}" style="${imgStyle}" />`;
 
             // Replace the KaTeX HTML wrapper
             const katexHtml = katex.renderToString(expr.latex, {
