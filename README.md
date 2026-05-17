@@ -13,6 +13,7 @@ Convert Markdown into formatted rich text that can be pasted directly into Googl
 - 📋 **One-Click Copy** – Copy formatted content, paste directly into Google Docs
 - 📎 **Paste from Clipboard** – One-click paste Markdown from clipboard
 - ⚡ **Quick Convert** – Click the logo to convert clipboard content and copy back
+- 🧮 **Math Support** – Render LaTeX formulas (KaTeX) and paste as images
 - 📊 **Table Support** – Auto-distribute column widths (16 cm / n), optimized for A4
 - 🔗 **Sync Scroll** – Editor and preview panels scroll together
 - ↔️ **Resizable Panels** – Drag the divider to adjust panel proportions

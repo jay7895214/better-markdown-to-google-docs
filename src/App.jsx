@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Copy, RefreshCw, Trash2, FileText, Check, Download, Link2, Link2Off, GripVertical, GripHorizontal, ClipboardPaste, Wand2 } from 'lucide-react';
-import { applyFixRules, applyPostFixRules } from './fixRules';
+import { applyFixRules, applyPostFixRules, extractFootnotes, replaceFootnoteRefs, appendFootnoteSection } from './fixRules';
+import { extractMath, replaceMathWithKatex, replaceMathWithImages } from './mathProcessor';
 import { Panel, Group, Separator } from 'react-resizable-panels';
 
 const useMarked = () => {
@@ -23,15 +24,47 @@ const useMarked = () => {
     return markedLib;
 };
 
+const useKatex = () => {
+    const [katexLib, setKatexLib] = useState(null);
+
+    useEffect(() => {
+        // Load KaTeX CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css';
+        document.head.appendChild(link);
+
+        // Load KaTeX JS
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.js';
+        script.async = true;
+        script.onload = () => {
+            setKatexLib(window.katex);
+        };
+        document.body.appendChild(script);
+
+        return () => {
+            document.head.removeChild(link);
+            document.body.removeChild(script);
+        };
+    }, []);
+
+    return katexLib;
+};
+
 const App = () => {
     const { t, i18n } = useTranslation();
     const marked = useMarked();
+    const katex = useKatex();
     const [markdown, setMarkdown] = useState('');
     const [htmlContent, setHtmlContent] = useState('');
     const [showToast, setShowToast] = useState(false);
     const [toastMsg, setToastMsg] = useState('');
     const [syncScroll, setSyncScroll] = useState(true);
     const [autoFix, setAutoFix] = useState(true);
+
+    // Store math expressions for clipboard image conversion
+    const mathExpressionsRef = useRef([]);
 
     const previewRef = useRef(null);
     const editorRef = useRef(null);
@@ -117,11 +150,7 @@ const App = () => {
         };
 
         renderer.table = (header, body) => {
-            const colCount = (header.match(/<\/th>/g) || []).length;
-            const colWidth = colCount > 0 ? (16 / colCount).toFixed(2) + 'cm' : 'auto';
-            const headerWithWidth = header.replace(/<th([^>]*)style="/g, `<th$1style="width: ${colWidth}; `);
-
-            return `<div align="center" style="text-align:center;"><table class="data-table" style="border-collapse:collapse;margin:0 auto;text-align:left;table-layout:auto;"><thead>${headerWithWidth}</thead><tbody>${body}</tbody></table></div><br><br>`;
+            return `<div style="margin:0 auto;"><table class="data-table" style="border-collapse:collapse;margin:0 auto;text-align:left;width:100%;table-layout:auto;"><thead>${header}</thead><tbody>${body}</tbody></table></div><br><br>`;
         };
 
         renderer.tablecell = (content, flags) => {
@@ -148,16 +177,34 @@ const App = () => {
         return marked.parse(text);
     };
 
+    // Shared rendering pipeline: markdown → HTML with KaTeX preview
+    const renderPipeline = (text) => {
+        let textToProcess = autoFix ? applyFixRules(text) : text;
+        const { cleanedText, footnotes } = extractFootnotes(textToProcess);
+        const textWithFootnoteRefs = replaceFootnoteRefs(cleanedText);
+
+        // Extract math before marked parses (to protect $...$ from misinterpretation)
+        const { processedText, expressions } = extractMath(textWithFootnoteRefs);
+        mathExpressionsRef.current = expressions;
+
+        let html = renderMarkdown(processedText);
+        if (autoFix) html = applyPostFixRules(html);
+        html = appendFootnoteSection(html, footnotes, (t) => marked.parseInline(t));
+
+        // Replace math placeholders with KaTeX HTML (for preview)
+        html = replaceMathWithKatex(html, expressions, katex);
+
+        return { html, expressions };
+    };
+
     useEffect(() => {
         if (marked && markdown) {
-            const textToRender = autoFix ? applyFixRules(markdown) : markdown;
-            let html = renderMarkdown(textToRender);
-            if (autoFix) html = applyPostFixRules(html);
+            const { html } = renderPipeline(markdown);
             setHtmlContent(html);
         } else if (!markdown) {
             setHtmlContent(`<p class="text-gray-400 italic">${t('app.previewPlaceholder')}</p>`);
         }
-    }, [markdown, marked, t, autoFix]);
+    }, [markdown, marked, katex, t, autoFix]);
 
     const handleEditorScroll = () => {
         if (!syncScroll || isScrollingRef.current === 'preview') return;
@@ -188,7 +235,14 @@ const App = () => {
     const copyRichText = async () => {
         if (!htmlContent) return;
         try {
-            const blob = new Blob([htmlContent], { type: 'text/html' });
+            let htmlToCopy = htmlContent;
+
+            // Convert KaTeX HTML to PNG images for Google Docs compatibility
+            if (mathExpressionsRef.current.length > 0 && katex) {
+                htmlToCopy = await replaceMathWithImages(htmlToCopy, mathExpressionsRef.current, katex);
+            }
+
+            const blob = new Blob([htmlToCopy], { type: 'text/html' });
             await navigator.clipboard.write([
                 new ClipboardItem({ 'text/html': blob })
             ]);
@@ -220,13 +274,17 @@ const App = () => {
             const text = await navigator.clipboard.readText();
             setMarkdown(text);
 
-            // Render with the same custom renderer (apply fix if enabled)
-            const textToRender = autoFix ? applyFixRules(text) : text;
-            let renderedHtml = renderMarkdown(textToRender);
-            if (autoFix) renderedHtml = applyPostFixRules(renderedHtml);
+            // Render with shared pipeline
+            const { html, expressions } = renderPipeline(text);
+
+            // Convert math to images for clipboard
+            let htmlToCopy = html;
+            if (expressions.length > 0 && katex) {
+                htmlToCopy = await replaceMathWithImages(htmlToCopy, expressions, katex);
+            }
 
             // Write rich text back to clipboard
-            const blob = new Blob([renderedHtml], { type: 'text/html' });
+            const blob = new Blob([htmlToCopy], { type: 'text/html' });
             await navigator.clipboard.write([
                 new ClipboardItem({ 'text/html': blob })
             ]);
@@ -419,7 +477,7 @@ const App = () => {
                     <span className="mx-2">•</span>
                     <span>MIT License</span>
                     <span className="mx-2">•</span>
-                    <span>v1.5.0</span>
+                    <span>v1.6.0</span>
                 </p>
             </footer>
 
